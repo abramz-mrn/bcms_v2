@@ -1,8 +1,8 @@
 FROM php:8.3-cli-alpine
 
 # Dependencies
-RUN apk add --no-cache bash git unzip libpq-dev openssh \
-    && docker-php-ext-install pdo pdo_pgsql
+RUN apk add --no-cache bash git unzip libpq-dev openssh libxml2-dev \
+    && docker-php-ext-install pdo pdo_pgsql xml
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
