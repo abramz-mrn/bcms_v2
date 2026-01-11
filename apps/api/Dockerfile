@@ -1,3 +1,5 @@
+FROM ghcr.io/roadrunner-server/roadrunner:2025.1.6 AS rrbin
+
 FROM php:8.3-cli-alpine
 
 # Dependencies + extensions
@@ -8,18 +10,13 @@ RUN apk add --no-cache \
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# RoadRunner binary (pinned) dengan retry dan extract terpisah
-ENV RR_VERSION=v2024.1.0
-RUN curl -fL --retry 5 --retry-delay 2 --retry-all-errors \
-      -o /tmp/rr.tgz \
-      https://github.com/roadrunner-server/roadrunner/releases/download/${RR_VERSION}/roadrunner-${RR_VERSION}-linux-amd64.tar.gz \
-  && tar -xzf /tmp/rr.tgz -C /usr/local/bin rr \
-  && rm /tmp/rr.tgz
+# Copy RR binary from stage
+COPY --from=rrbin /usr/bin/rr /usr/local/bin/rr
 
 WORKDIR /var/www/api
 COPY . .
 
-# Bila dependency dev tidak perlu di image, biarkan seperti ini
+# Install PHP deps (tanpa dev di image)
 RUN composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader || true
 
 EXPOSE 8000
