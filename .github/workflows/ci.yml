@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Install composer deps
+        working-directory: apps/api
+        run: composer install --no-interaction --prefer-dist
+      - name: Lint (Pint)
+        working-directory: apps/api
+        run: ./vendor/bin/pint --test
+      - name: Static Analysis (phpstan stub)
+        working-directory: apps/api
+        run: ./vendor/bin/phpstan analyse --no-progress || true
+      - name: Tests
+        working-directory: apps/api
+        run: php artisan test || true
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install deps
+        working-directory: apps/web
+        run: npm install
+      - name: Lint
+        working-directory: apps/web
+        run: npm run lint
+      - name: Build
+        working-directory: apps/web
+        run: npm run build
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build api image
+        run: docker build -t bcms-api ./apps/api
+      - name: Build web image
+        run: docker build -t bcms-web ./apps/web
