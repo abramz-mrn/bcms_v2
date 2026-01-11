@@ -1,5 +1,5 @@
 {
-  "name": "a3ramz-code/bcms-api",
+  "name": "abramz-mrn/bcms-api",
   "type": "project",
   "require": {
     "php": "^8.3",
